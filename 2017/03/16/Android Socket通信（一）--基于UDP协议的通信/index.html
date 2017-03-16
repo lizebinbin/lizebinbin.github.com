@@ -1,0 +1,865 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="socket通信," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/uploads/avatar.jpg?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="最近做功能需要用到使用UDP协议和服务器进行通信，之前没有接触这一块，所以花了些时间了解和实现，这里做一下记录和分享。
+
+首先我们要知道UDP通信协议是Socket通信的一种实现方式，Socket通信一般有两种通信方式：基于TCP协议、基于UDP协议。这两者的差别和优缺点就不说了，这里主要讲一下基于UDP协议的实现。
+基本原理基于UDP的通信都是通过java.net.DatagramSocket">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Socket通信（一）--基于UDP协议的通信">
+<meta property="og:url" content="http://yoursite.com/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/index.html">
+<meta property="og:site_name" content="码农Moore的Android路">
+<meta property="og:description" content="最近做功能需要用到使用UDP协议和服务器进行通信，之前没有接触这一块，所以花了些时间了解和实现，这里做一下记录和分享。
+
+首先我们要知道UDP通信协议是Socket通信的一种实现方式，Socket通信一般有两种通信方式：基于TCP协议、基于UDP协议。这两者的差别和优缺点就不说了，这里主要讲一下基于UDP协议的实现。
+基本原理基于UDP的通信都是通过java.net.DatagramSocket">
+<meta property="og:updated_time" content="2017-03-16T07:12:39.068Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Socket通信（一）--基于UDP协议的通信">
+<meta name="twitter:description" content="最近做功能需要用到使用UDP协议和服务器进行通信，之前没有接触这一块，所以花了些时间了解和实现，这里做一下记录和分享。
+
+首先我们要知道UDP通信协议是Socket通信的一种实现方式，Socket通信一般有两种通信方式：基于TCP协议、基于UDP协议。这两者的差别和优缺点就不说了，这里主要讲一下基于UDP协议的实现。
+基本原理基于UDP的通信都是通过java.net.DatagramSocket">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/"/>
+
+
+
+
+
+  <title> Android Socket通信（一）--基于UDP协议的通信 | 码农Moore的Android路 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">码农Moore的Android路</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">编程，去超越</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+		<li>博客和音乐更配哦</li>
+		<li>
+			<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=169185&auto=0&height=66"></iframe>
+		</li>
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Moore">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="码农Moore的Android路">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="码农Moore的Android路" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Android Socket通信（一）--基于UDP协议的通信
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-16T14:37:21+08:00">
+                2017-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <a href="/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/16/Android Socket通信（一）--基于UDP协议的通信/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>最近做功能需要用到使用UDP协议和服务器进行通信，之前没有接触这一块，所以花了些时间了解和实现，这里做一下记录和分享。</p>
+</blockquote>
+<p>首先我们要知道UDP通信协议是Socket通信的一种实现方式，Socket通信一般有两种通信方式：<strong>基于TCP协议</strong>、<strong>基于UDP协议</strong>。这两者的差别和优缺点就不说了，这里主要讲一下基于UDP协议的实现。</p>
+<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>基于UDP的通信都是通过java.net.DatagramSocket这个类来实现的,我们常用的有connect()、disConnect()、send()、receive()几个方法。通过方法名我们可以轻易区分出用法。另一个需要知道的就是DatagramPacket类，如果把DatagramSocket比作管道的话，DatagramPacket就是管道中运输的物品，也就是说，它就是数据的载体。</p>
+<p>DatagramSocket：</p>
+<pre><code>public DatagramSocket()throws SocketException {
+    this(0);
+}
+
+public DatagramSocket(int aPort)throws SocketException {
+    checkPort(aPort);
+    createSocket(aPort, Inet4Address.ANY);
+}
+
+public DatagramSocket(int aPort, InetAddress addr)throws SocketException {
+    checkPort(aPort);
+    createSocket(aPort, (addr == null) ? Inet4Address.ANY : addr);
+}
+</code></pre><p>三个构造方法，我们可以指定端口和IP，也可以不指定，在发送数据的时候，在数据包中指定。</p>
+<p>DatagramPacket：</p>
+<pre><code>public DatagramPacket(byte[]data, int length) {…}
+public DatagramPacket(byte[]data, int offset, int length) {…}
+public DatagramPacket(byte[]data, int offset, int length, InetAddress host, int aPort) {…}
+public DatagramPacket(byte[]data, int length, InetAddress host, int port) {…}
+</code></pre><p>so 我们可以看到可以在数据包中设置ip和端口，所以如果连接时不指定也是可以的。</p>
+<h3 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h3><p>1、connect new出一个DatagramSocket对象，设置端口和IP，connect()；<br>2、send  创建一个DatagramPacket对象，socket.send(packet)发送数据；<br>3、receive  创建一个DatagramPacket对象，socket.receive(package)接收数据；</p>
+<h3 id="创建一个连接"><a href="#创建一个连接" class="headerlink" title="创建一个连接"></a>创建一个连接</h3><p>使用connect方法创建一个Socket连接</p>
+<pre><code>public void connect() {
+    if (mSocket == null || mSocket.isClosed()) {
+        try {
+            //获取连接 ip：192.168.1.3  port：11069
+            InetAddress address = InetAddress.getByName(Command.udp_address);
+            mSocket = new DatagramSocket();
+            mSocket.connect(address, Command.udp_port);
+            messageQueue = new ArrayList &lt; String &gt; ();
+            //开启接收线程
+            mReceiveThread = new ReceiveThread();
+            mReceiveThread.start();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><h3 id="定时发送数据保持通信"><a href="#定时发送数据保持通信" class="headerlink" title="定时发送数据保持通信"></a>定时发送数据保持通信</h3><p>要保持通信的话，肯定要用到线程了，定时发送数据的话，可以用Handler，或者也可以使用AlarmManager。这里使用Handler实现就好了。</p>
+<p>写的时候看了一堆博客，发送的时候都是new 出一个Thread进行发送数据，发送之后写接收数据的代码，而且没有进行回收或者怎样，只能最后通过GC回收，当然大体上看是没毛病的，但是其实有很大的问题！因为我项目要求收到服务器的应答之后做一些相应的操作，，然后，然后，，因为每一个线程都在等待着接收数据，所以服务端回复一条数据之后，这边每个线程都作出了回应（回复服务器一条不一样的数据），10s创建一个线程发送数据，服务器过了一段时间再回复，然后就瞬间爆炸！</p>
+<p>所以，，接收和发送应该是要分开的，不能阻塞在同一个线程中。一开始想到Handler的原理和机制，想模仿它死循环从一个队列中取数据，如果有数据就发送，想法是没毛病，也能发送，但是当我想在发送成功之后从列表中remove掉这条数据之后就不行了，线程阻塞了。具体原因应该是造成死锁了，因为数据列表是定义在主线程，然后一直在被工作线程占用着，获取不到对象进行remove操作，等待一定时间后，直接crash掉了（我的分析是这样的）。</p>
+<p>ok，那就写两个线程好了，一个SendThread，一个ReceiveThread，另外通过Handler控制10s定时发送。</p>
+<p>发送线程：</p>
+<pre><code>public class SendThread extends Thread {
+    @ Override
+    public void run() {
+        super.run();
+        try {
+            if (mSocket == null || mSocket.isClosed())
+                return;
+            if (messageQueue.size() &lt; 1)
+                return;
+            //发送
+            final String data = messageQueue.get(0);
+            byte[]datas = data.getBytes();
+            InetAddress address = InetAddress.getByName(Command.udp_address);
+            final DatagramPacket packet = new DatagramPacket(datas, datas.length, address, Command.udp_port);
+            mSocket.send(packet);
+            Logs.e(&quot;ConnectManager&quot;, &quot;send success data is:&quot; + data);
+            messageQueue.remove(0);
+
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><p>接收线程：</p>
+<pre><code>private class ReceiveThread extends Thread {
+    @ Override
+    public void run() {
+        super.run();
+        if (mSocket == null || mSocket.isClosed())
+            return;
+        try {
+            byte datas[] = new byte[512];
+            DatagramPacket packet = new DatagramPacket(datas, datas.length, address, Command.udp_port);
+            mSocket.receive(packet);
+            String receiveMsg = new String(packet.getData()).trim();
+            Logs.e(&quot;ConnectManager&quot;, &quot;receive msg data is:&quot; + receiveMsg);
+            mHandler.sendEmptyMessage(2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><p>我们可以看到ReceiveThread中只接收了一次数据，那如何实现一直保持通信？接收消息？Handler！接收到消息之后我们通过Handler发送了一条消息，这条消息干嘛的呢，重启这个线程，也就是让它继续接收数据。 这样的话，就保证了只有一个线程在接收数据。</p>
+<pre><code>private Handler mHandler = new Handler() {
+    @ Override
+    public void handleMessage(Message msg) {
+        super.handleMessage(msg);
+        if (msg.what == 2) {
+            mReceiveThread.interrupt();
+            mReceiveThread = null;
+            mReceiveThread = new ReceiveThread();
+            mReceiveThread.start();
+        }
+    }
+};
+</code></pre><p>同样，定时发送数据也是通过Handler实现的，每10s发送一个消息，让socket发送一个数据包，并且给自己发送一个10s后发送的同样的消息，反正就是自己控几自己啦。 </p>
+<p>发送消息：</p>
+<pre><code>public void sendPackageRegister() {
+    String content = &quot;(1001,&quot; + Command.deviceId + &quot;,register)&quot;;
+    messageQueue.add(content);
+    mSendThread.interrupt();
+    mSendThread = null;
+    mSendThread = new SendThread();
+    mSendThread.start();
+}
+</code></pre><p>最后，记得停掉Handler一直发送数据，停掉线程。</p>
+<p>努力，去超越！</p>
+<p>个人网站： <a href="http://www.lizebin.info" target="_blank" rel="external">http://www.lizebin.info</a></p>
+<p>github：<a href="https://github.com/lizebinbin" target="_blank" rel="external">https://github.com/lizebinbin</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/socket通信/" rel="tag"># socket通信</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/12/为什么写博客，如何使用GithubPages+hexo搭建个人博客站点/" rel="next" title="为什么写博客，如何使用GithubPages+hexo搭建个人博客站点">
+                <i class="fa fa-chevron-left"></i> 为什么写博客，如何使用GithubPages+hexo搭建个人博客站点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2017/03/16/Android Socket通信（一）--基于UDP协议的通信/"
+     data-title="Android Socket通信（一）--基于UDP协议的通信"
+     data-content=""
+     data-url="http://yoursite.com/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/03/16/Android Socket通信（一）--基于UDP协议的通信/"
+           data-title="Android Socket通信（一）--基于UDP协议的通信" data-url="http://yoursite.com/2017/03/16/Android Socket通信（一）--基于UDP协议的通信/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.jpg"
+               alt="Moore" />
+          <p class="site-author-name" itemprop="name">Moore</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">4</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lizebinbin" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/2957909151/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本原理"><span class="nav-number">1.</span> <span class="nav-text">基本原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基本操作"><span class="nav-number">2.</span> <span class="nav-text">基本操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建一个连接"><span class="nav-number">3.</span> <span class="nav-text">创建一个连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定时发送数据保持通信"><span class="nav-number">4.</span> <span class="nav-text">定时发送数据保持通信</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Moore</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"lizebinbin"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
